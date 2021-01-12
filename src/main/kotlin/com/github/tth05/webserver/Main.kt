@@ -1,38 +1,41 @@
+import com.github.tth05.webserver.http.THttpRequest
+import com.github.tth05.webserver.http.THttpResponse
+import com.github.tth05.webserver.http.THttpStatusCode
+import com.github.tth05.webserver.http.createResponse
 import java.net.ServerSocket
-import java.net.Socket
-import java.nio.ByteBuffer
 
-fun main() {
-    val socket = ServerSocket(6701)
-    val s = socket.accept()
-
-    var inStream = s.getInputStream()
+fun main(args: Array<String>) {
+    val socket = ServerSocket(8081)
 
     while (true) {
-        val builder = StringBuilder()
-        while (true) {
-            val read = inStream.read()
-            if (read == 10)
-                break
-            builder.append(read.toChar())
+        val s = socket.accept()
+        val inStream = s.getInputStream()
+
+        val request = THttpRequest.fromStream(inStream)
+        var response: THttpResponse
+
+        if (request.path == "/") {
+            response = createResponse(true) {
+                header("Content-Type" to "text/html")
+                writeResource("index.html")
+            }
+        } else if (request.path == "/favicon.ico") {
+            response = createResponse(true) {
+                header("Content-Type" to "image/png")
+                writeResource("favicon.png")
+            }
+        } else {
+            response = createResponse(true) {
+//                    header("Content-Type" to "image/png")
+                try {
+                    writeResource(request.path.substring(1))
+                } catch (e: IllegalArgumentException) {
+                    statusCode = THttpStatusCode.NOT_FOUND
+                }
+            }
         }
 
-        println(builder.toString())
-
-        if(inStream.available() < 1) {
-            val list = mutableListOf<Byte>()
-            list.addAll("HTTP/1.1 200 OK".toByteArray().toList())
-            list.add(13)
-            list.add(10)
-            list.addAll("Content-Type: text/html".toByteArray().toList())
-            list.add(13)
-            list.add(10)
-            list.add(13)
-            list.add(10)
-            list.addAll("Hallo".toByteArray().toList())
-            list.add(13)
-            list.add(10)
-            s.getOutputStream().write(list.toByteArray())
-        }
+        s.getOutputStream().write(response.toByteArray())
+        s.close()
     }
 }
