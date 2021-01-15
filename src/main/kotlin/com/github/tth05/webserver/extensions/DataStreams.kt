@@ -11,7 +11,7 @@ fun InputStream.toByteArray(): ByteArray {
         out.write(buffer, 0, r)
     }
 
-    return out.toByteArray().apply {  }
+    return out.toByteArray()
 }
 
 fun ByteArrayOutputStream.writeCRLF() {

@@ -1,3 +1,5 @@
+@file:JvmName("THttpRequestKt")
+
 package com.github.tth05.webserver.http
 
 import com.github.tth05.webserver.extensions.writeCRLF
@@ -27,7 +29,7 @@ class THttpRequest private constructor(
             val header = mutableMapOf<String, String>()
             var line = reader.readLine()
             while (line.isNotBlank()) {
-                header.put(line.substring(0, line.indexOf(':')), line.substring(line.indexOf(':') + 2))
+                header[line.substring(0, line.indexOf(':'))] = line.substring(line.indexOf(':') + 2)
                 line = reader.readLine()
             }
 
@@ -41,7 +43,7 @@ class THttpRequest private constructor(
     }
 }
 
-class THttpResponse(val compressed: Boolean) {
+class THttpResponse(private val compressed: Boolean) {
 
     var statusCode = THttpStatusCode.OK
     private val header = mutableMapOf<String, String>()
@@ -105,7 +107,7 @@ enum class THttpMethod {
     GET
 }
 
-fun createResponse(compressed: Boolean, block: THttpResponse.() -> Unit): THttpResponse {
+inline fun createResponse(compressed: Boolean, block: THttpResponse.() -> Unit): THttpResponse {
     val response = THttpResponse(compressed)
     block(response)
     return response
