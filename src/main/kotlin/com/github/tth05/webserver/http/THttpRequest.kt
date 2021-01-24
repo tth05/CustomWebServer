@@ -1,5 +1,3 @@
-@file:JvmName("THttpRequestKt")
-
 package com.github.tth05.webserver.http
 
 import com.github.tth05.webserver.extensions.writeCRLF
@@ -21,9 +19,14 @@ class THttpRequest private constructor(
     companion object {
         fun fromStream(stream: InputStream): THttpRequest {
             val reader = BufferedReader(InputStreamReader(stream))
-            val firstLine = reader.readLine().split(' ')
+            val firstLine = reader.readLine()?.split(' ') ?: throw HttpRequestReadException()
 
-            val method = THttpMethod.valueOf(firstLine[0])
+            val method = try {
+                THttpMethod.valueOf(firstLine[0])
+            } catch (e: IllegalArgumentException) {
+                throw InvalidHttpMethodException()
+            }
+
             val path = firstLine[1]
 
             val header = mutableMapOf<String, String>()
@@ -100,6 +103,7 @@ enum class THttpStatusCode(val code: Int, val stringCode: String) {
     OK(200, "OK"),
 
     //4**
+    BAD_REQUEST(400, "Bad Request"),
     NOT_FOUND(404, "Not Found")
 }
 
